@@ -72,3 +72,6 @@ Rgemv__Float128_CXXFLAGS= $(_Float128cxxflags)
 Rgemv__Float128_LDFLAGS= $(_Float128_libdepends)
 
 
+if ENABLE_OPENCL
+include Makefile._Float128_opencl.am
+endif

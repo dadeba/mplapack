@@ -190,6 +190,24 @@ AC_SUBST(CUDA_VERSION_MAJOR)
 AC_SUBST(IS_CUDA_VERSION_MAJOR_3)
 AC_SUBST(NVCC)
 
+############## opencl test
+AC_ARG_ENABLE(opencl,
+[  --enable-opencl    Enable OpenCL FP])
+AM_CONDITIONAL(ENABLE_OPENCL, test x$enable_opencl = xyes)
+
+OPENCL_CFLAGS="-I$CUDATOOLKITHOME/include"
+OPENCL_LIBS="-lOpenCL"
+OPENCL_LDFLAGS="-L$CUDATOOLKITHOME/lib$SUFFIX"
+
+AC_SUBST(OPENCL_CFLAGS)
+AC_SUBST(OPENCL_LIBS)
+AC_SUBST(OPENCL_LDFLAGS)
+
+if test x$enable_opencl = x"yes"; then
+AC_MSG_RESULT([Test support for OpenCL FP!!!!!!!!!!])
+fi
+###############
+
 dnl enable benchmark; compare with reference LAPACK and BLAS, and OpenBLAS
 AC_ARG_ENABLE(benchmark,
 AS_HELP_STRING([--enable-benchmark], [Enable benchmark]))
@@ -927,6 +945,7 @@ mpblas/optimized/dd/cuda/Makefile
 mpblas/optimized/double/Makefile
 mpblas/optimized/_Float64x/Makefile
 mpblas/optimized/_Float128/Makefile
+mpblas/optimized/_Float128/opencl/Makefile
 mpblas/test/Makefile
 mpblas/test/gmp/Makefile
 mpblas/test/mpfr/Makefile

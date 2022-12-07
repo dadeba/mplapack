@@ -342,7 +342,7 @@ namespace __CPP {
     __CPP_Helper(int ip = 0, int id = 0) {
       if (cl_first) {
 	acc0 = new __CPP_Helper0;
-	acc0->setup(ip, id);
+	acc0->setup();
 	cl_first = false;
       }
     }

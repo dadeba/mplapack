@@ -20,7 +20,7 @@ void init_gpu(int bs = 4)
   bs_opencl = bs;
   sprintf(options, "-D TS=%i", bs);
   
-  p = new __CPP::__CPP_Helper(0, 0);
+  p = new __CPP::__CPP_Helper();
   
   cl_context ctx = p->getctx();
   q = p->getq();

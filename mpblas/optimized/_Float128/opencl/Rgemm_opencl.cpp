@@ -10,7 +10,7 @@ static cl_kernel ker, ker_nn, ker_tn, ker_nt, ker_tt;
 static size_t buffer_size_a_byte_global;
 static size_t buffer_size_b_byte_global;
 static size_t buffer_size_c_byte_global;
-static _Float128 *AB;
+//static _Float128 *AB;
 static size_t bs_opencl = 1;
 static int __firstcall__ = 1;
 
@@ -40,11 +40,11 @@ void init_gpu(int bs = 4)
   assert(result == CL_SUCCESS);
   b_y  = clCreateBuffer(ctx, CL_MEM_READ_ONLY,  buffer_size_b_byte_global, NULL, &result);
   assert(result == CL_SUCCESS);
-  b_z  = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, buffer_size_c_byte_global, NULL, &result);
+  b_z  = clCreateBuffer(ctx, CL_MEM_READ_WRITE, buffer_size_c_byte_global, NULL, &result);
   assert(result == CL_SUCCESS);
 
-  AB = (_Float128 *)memalign(64, buffer_size_c_byte_global);
-  assert(AB != NULL);
+  //  AB = (_Float128 *)memalign(64, buffer_size_c_byte_global);
+  //  assert(AB != NULL);
   __firstcall__ = 0;
 
   std::cout << "block size for OpenCL kernels = " << bs_opencl << "\n";
@@ -71,6 +71,8 @@ void Rgemm_internal(bool btransa, bool btransb,
   }else{
   }
 
+  //  std::cerr << "called Rgemm for OpenCL\n";
+  
   // Matrix A : m * k  
   // Matrix B : k * n
   // Matrix C : m * n
@@ -108,24 +110,24 @@ void Rgemm_internal(bool btransa, bool btransb,
 
   if (buffer_size_a_byte > buffer_size_a_byte_global) {
     clReleaseMemObject(b_x);
-    buffer_size_a_byte_global = 2*buffer_size_a_byte;
+    buffer_size_a_byte_global = buffer_size_a_byte;
     b_x  = clCreateBuffer(ctx, CL_MEM_READ_ONLY, buffer_size_a_byte_global, NULL, &result);
     assert(result == CL_SUCCESS);
   }
   if (buffer_size_b_byte > buffer_size_b_byte_global) {
     clReleaseMemObject(b_y);
-    buffer_size_b_byte_global = 2*buffer_size_b_byte;
+    buffer_size_b_byte_global = buffer_size_b_byte;
     b_y  = clCreateBuffer(ctx, CL_MEM_READ_ONLY,  buffer_size_b_byte_global, NULL, &result);
     assert(result == CL_SUCCESS);
   }
   if (buffer_size_c_byte > buffer_size_c_byte_global) {
     clReleaseMemObject(b_z);
-    buffer_size_c_byte_global = 2*buffer_size_c_byte;
-    b_z  = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY,  buffer_size_c_byte_global, NULL, &result);
+    buffer_size_c_byte_global = buffer_size_c_byte;
+    b_z  = clCreateBuffer(ctx, CL_MEM_READ_WRITE,  buffer_size_c_byte_global, NULL, &result);
     assert(result == CL_SUCCESS);
-    free(AB);
-    AB = (_Float128 *)memalign(64, buffer_size_c_byte_global);
-    assert(AB != NULL);
+    //    free(AB);
+    //    AB = (_Float128 *)memalign(64, buffer_size_c_byte_global);
+    //    assert(AB != NULL);
   }
 
   if (btransa == true  && btransb == true ) ker = ker_tt;
@@ -154,23 +156,14 @@ void Rgemm_internal(bool btransa, bool btransb,
 
   clEnqueueWriteBuffer(q, b_x, CL_TRUE, 0, buffer_size_a_byte, A,  0, NULL, &event);
   clEnqueueWriteBuffer(q, b_y, CL_TRUE, 0, buffer_size_b_byte, B,  0, NULL, &event);
-
+  clEnqueueWriteBuffer(q, b_z, CL_TRUE, 0, buffer_size_c_byte, C,  0, NULL, &event);
+  
   result = clEnqueueNDRangeKernel(q, ker, 2, NULL, nt, lt, 0, NULL, &e);
   assert(result == CL_SUCCESS);
   clFinish(q);
   
-  clEnqueueReadBuffer(q, b_z, CL_TRUE, 0, buffer_size_c_byte, AB, 0, NULL, &event);  
+  clEnqueueReadBuffer(q, b_z, CL_TRUE, 0, buffer_size_c_byte, C, 0, NULL, &event);  
   clFinish(q);
-
-  {
-    int j, i;
-#pragma omp parallel for private(j, i)
-    for (j = 0; j < n; j++) {
-      for (i = 0; i < m; i++) {
-	C[i + j * ldc] = beta*C[i + j * ldc] + alpha*AB[i + j * ldc];
-      }
-    }
-  }
 }
 
 void Rgemm_ref(const char *transa, const char *transb,

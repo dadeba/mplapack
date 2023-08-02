@@ -85,6 +85,25 @@ namespace __CPP {
       exit(-1);
     }
 
+    // https://arrayfire.com/blog/generating-ptx-files-from-opencl-code/
+    {
+      // Query binary (PTX file) size
+      size_t bin_sz;
+      cl_int err = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
+
+      // Read binary (PTX file) to memory buffer
+      unsigned char *bin = (unsigned char *)malloc(bin_sz);
+      err = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
+
+      // Save PTX
+      char buf[1024];
+      sprintf(buf, "%s_ocl.ptx", kernel_name);  
+      FILE *fp = fopen(buf, "wb");
+      fwrite(bin, sizeof(char), bin_sz, fp);
+      fclose(fp);
+      free(bin);
+    }
+
     return res;
   }
 

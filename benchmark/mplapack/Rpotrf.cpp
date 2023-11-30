@@ -163,6 +163,8 @@ int main(int argc, char *argv[]) {
         delete[] Aref;
         delete[] A;
         n = n + STEP;
+
+	fflush(stdout);
     }
     if (check_flag)
         dlclose(handle);

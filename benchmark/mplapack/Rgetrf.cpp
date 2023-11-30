@@ -150,6 +150,8 @@ int main(int argc, char *argv[]) {
         delete[] a;
         n = n + STEPN;
         m = m + STEPM;
+
+	fflush(stdout);
     }
     if (check_flag)
         dlclose(handle);
